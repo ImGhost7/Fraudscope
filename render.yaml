@@ -1,0 +1,33 @@
+# render.yaml — One-click Render.com deployment config
+# Push to GitHub, connect repo at dashboard.render.com
+
+services:
+  # Backend (Node.js in-memory demo server)
+  - type: web
+    name: fraudscope-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node mock-server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+
+  # Frontend (React static site)
+  - type: web
+    name: fraudscope-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://fraudscope-backend.onrender.com/api
+      - key: VITE_SOCKET_URL
+        value: https://fraudscope-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
