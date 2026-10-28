@@ -30,3 +30,7 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+ml-service/gnn/results/raw.pkl
+ml-service/gnn/results/transactions.csv
+ml-service/gnn/results/test_scores.csv
