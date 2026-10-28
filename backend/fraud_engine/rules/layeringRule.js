@@ -73,47 +73,48 @@ function checkLayering(tx, allTx, allAccounts, allAlerts = []) {
 
   // ── BFS over transaction graph ───────────────────────────────────────────────
   const visited   = new Set();
-  const chain     = []; // array of { from, to, tx, depth }
-  const queue     = [{ account: tx.sender, depth: 0, prevTx: null }];
   let   maxDepth  = 0;
-
-  const txByReceiver = {};
   const cutoff = new Date(tx.timestamp).getTime() - HOP_WINDOW_MS;
+  const txTime = new Date(tx.timestamp).getTime();
 
-  // Build index: receiver → [transactions]
+  // Index: receiver → earlier transactions (the chain is traced BACKWARDS from the
+  // current tx, because later hops do not exist yet when a transaction is screened).
+  const txByReceiver = {};
   for (const t of allTx) {
-    if (new Date(t.timestamp).getTime() >= cutoff) {
-      if (!txByReceiver[t.sender]) txByReceiver[t.sender] = [];
-      txByReceiver[t.sender].push(t);
+    if (t === tx || t.tx_id === tx.tx_id) continue;
+    const ts = new Date(t.timestamp).getTime();
+    if (ts >= cutoff && ts <= txTime) {
+      if (!txByReceiver[t.receiver]) txByReceiver[t.receiver] = [];
+      txByReceiver[t.receiver].push(t);
     }
   }
-  // Also include current tx
-  if (!txByReceiver[tx.sender]) txByReceiver[tx.sender] = [];
-  txByReceiver[tx.sender].push(tx);
 
   let circularDetected = false;
+  const edges = [{ from: tx.sender, to: tx.receiver, tx }];
+  const queue = [{ account: tx.sender, depth: 1 }];
+  visited.add(tx.sender);
 
   while (queue.length > 0) {
-    const { account, depth, prevTx } = queue.shift();
-
-    if (depth > MAX_DEPTH) continue;
-
-    if (visited.has(account)) {
-      if (account === tx.sender && depth >= 2 && !circularDetected) {
-        circularDetected = true;
-      }
-      continue;
-    }
-
-    visited.add(account);
+    const { account, depth } = queue.shift();
     maxDepth = Math.max(maxDepth, depth);
+    if (depth >= MAX_DEPTH) continue;
 
-    const outgoing = txByReceiver[account] || [];
-    for (const outTx of outgoing.slice(0, 5)) { // limit fan-out breadth
-      chain.push({ from: account, to: outTx.receiver, tx: outTx, depth: depth + 1, prevTx });
-      queue.push({ account: outTx.receiver, depth: depth + 1, prevTx: outTx });
+    const incoming = txByReceiver[account] || [];
+    for (const inTx of incoming.slice(0, 5)) { // limit fan-in breadth
+      edges.push({ from: inTx.sender, to: account, tx: inTx });
+      if (inTx.sender === tx.receiver && depth + 1 >= 3) circularDetected = true;
+      if (visited.has(inTx.sender)) continue;
+      visited.add(inTx.sender);
+      queue.push({ account: inTx.sender, depth: depth + 1 });
     }
   }
+
+  // Chronological chain (oldest hop first, current transaction last)
+  const chain = edges
+    .slice(1)
+    .sort((x, y) => new Date(x.tx.timestamp) - new Date(y.tx.timestamp))
+    .concat(edges[0])
+    .map((e, i, arr) => ({ ...e, depth: i + 1, prevTx: i > 0 ? arr[i - 1].tx : null }));
 
   const hasHops = maxDepth >= BEHAVIOUR.LAYERING_MIN_HOPS;
 
@@ -268,6 +269,7 @@ function checkLayering(tx, allTx, allAccounts, allAlerts = []) {
 
   // Summary reason for layering depth
   if (maxDepth >= BEHAVIOUR.LAYERING_MIN_HOPS) {
+    flags.unshift('LAYERING_CHAIN_DETECTED');
     reasons.unshift(
       `Layering chain detected: funds traced through ${maxDepth} account hops ` +
       `from ${tx.sender} within 24 hours. Chain: ${[...visited].join(' → ')}`
