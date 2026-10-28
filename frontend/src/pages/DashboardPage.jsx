@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '../services/api';
 import { useSocket } from '../contexts/SocketContext';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   Activity, AlertTriangle, Shield, Users, Zap,
   ArrowUpRight, ArrowDownRight
@@ -126,7 +126,7 @@ export default function DashboardPage() {
   const { data, refetch } = useQuery({ queryKey: ['dashboard'], queryFn: dashboardApi.getStats });
   const { liveTransactions, liveAlerts, connected } = useSocket();
 
-    setTxCount(prev => prev + 1);
+  useEffect(() => {
     const timer = setTimeout(() => refetch(), 3000);
     return () => clearTimeout(timer);
   }, [liveTransactions.length]);
