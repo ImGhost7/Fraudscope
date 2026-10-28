@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '../services/api';
+import { dashboardApi, mlApi } from '../services/api';
+import GnnPanel from '../components/gnn/GnnPanel';
 import { useSocket } from '../contexts/SocketContext';
 import { useEffect } from 'react';
 import {
@@ -125,6 +126,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function DashboardPage() {
   const { data, refetch } = useQuery({ queryKey: ['dashboard'], queryFn: dashboardApi.getStats });
   const { liveTransactions, liveAlerts, connected } = useSocket();
+  const mlStatus = useQuery({ queryKey: ['ml-status'], queryFn: mlApi.getStatus, refetchInterval: 8000 });
+  const gnnAccounts = useQuery({ queryKey: ['gnn-accounts'], queryFn: () => mlApi.getGnnAccounts({ min_score: 60, limit: 10 }), refetchInterval: 8000, enabled: !!mlStatus.data?.gnn?.ready });
 
   useEffect(() => {
     const timer = setTimeout(() => refetch(), 3000);
@@ -175,6 +178,11 @@ export default function DashboardPage() {
         <StatCard label="Open Alerts" value={stats.alerts?.open || 0} icon={Zap} color="#c98520" subLabel={`${stats.alerts?.critical || 0} critical`} />
         <StatCard label="Flagged Accounts" value={stats.accounts?.flagged || 0} icon={Users} color="#c9a84c" subLabel="Under monitoring" />
         <StatCard label="Active Cases" value={stats.cases?.open || 0} icon={Shield} color="#16a870" subLabel="Investigations open" />
+      </div>
+
+      {/* ── GNN detection layer ── */}
+      <div style={{ marginBottom: 22 }}>
+        <GnnPanel status={mlStatus.data} accounts={gnnAccounts.data?.accounts || []} isLoading={mlStatus.isLoading} isError={mlStatus.isError} />
       </div>
 
       {/* ── Charts row ── */}

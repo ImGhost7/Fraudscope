@@ -28,6 +28,8 @@ const BRANCHES = ['SBI Main', 'HDFC Andheri', 'ICICI Kurla', 'Axis Bank Bandra',
 let simulatorInterval = null;
 let fraudScenarioInterval = null;
 let io = null;
+let mlPipeline = null;
+function setMlPipeline(p) { mlPipeline = p; }
 
 async function seedAccounts() {
   const count = await Account.countDocuments();
@@ -115,15 +117,14 @@ async function emitTransaction(txData) {
     const tx = new Transaction(txData);
     await tx.save();
 
-    // Update account balances
-    await Account.findOneAndUpdate(
-      { account_id: txData.sender },
-      { $inc: { balance: -txData.amount, total_outgoing: txData.amount, tx_count: 1 }, last_active: new Date() }
-    );
-    await Account.findOneAndUpdate(
-      { account_id: txData.receiver },
-      { $inc: { balance: txData.amount, total_incoming: txData.amount, tx_count: 1 }, last_active: new Date() }
-    );
+    // Account state BEFORE this transaction (dormancy rules + GNN dormancy feature need the prior activity)
+    const [senderAcc, receiverAcc] = await Promise.all([
+      Account.findOne({ account_id: txData.sender }).lean(), Account.findOne({ account_id: txData.receiver }).lean(),
+    ]);
+    // Update balances now; last_active is advanced only after scoring
+    await Account.findOneAndUpdate({ account_id: txData.sender }, { $inc: { balance: -txData.amount, total_outgoing: txData.amount, tx_count: 1 } });
+    await Account.findOneAndUpdate({ account_id: txData.receiver }, { $inc: { balance: txData.amount, total_incoming: txData.amount, tx_count: 1 } });
+    mlPipeline?.queueTransaction(txData, senderAcc, receiverAcc, { sender: senderAcc?.last_active, receiver: receiverAcc?.last_active });
 
     if (io) io.emit('new_transaction', tx);
 
@@ -147,13 +148,17 @@ async function emitTransaction(txData) {
     } });
     if (result.alert) {
       const { _id, ...alertDoc } = result.alert; // let MongoDB assign its own _id
-      await Alert.create(alertDoc);
+      const created = await Alert.create(alertDoc);
+      mlPipeline?.mirror?.alerts.unshift(created.toObject());
       const senderAcc = allAccounts.find(a => a.account_id === txObj.sender);
       if (senderAcc) {
         await Account.updateOne({ account_id: senderAcc.account_id }, { $set: { is_flagged: !!senderAcc.is_flagged, risk_score: senderAcc.risk_score } });
       }
     }
+    await Account.updateMany({ account_id: { $in: [txObj.sender, txObj.receiver] } }, { $set: { last_active: new Date() } });
     if (io) io.emit('transaction_updated', txObj);
+    // second/third detection layers (Isolation Forest + GNN + fusion) run detached and fail open
+    mlPipeline?.enrichTransaction(txObj, { riskScore: result.finalScore, riskLevel: result.riskLevel, flags: result.allFlags, mlFeatures: result.mlFeatures }).catch(() => {});
 
     return txObj;
   } catch (err) {
@@ -255,8 +260,9 @@ async function simulateMule() {
 
 const fraudScenarios = [simulateStructuring, simulateLayering, simulateFanOut, simulateDormantActivation];
 
-function startSimulator(socketIo) {
+function startSimulator(socketIo, pipeline) {
   io = socketIo;
+  if (pipeline) mlPipeline = pipeline;
 
   seedAccounts().then(() => {
     console.log('🚀 Transaction simulator started');
@@ -284,6 +290,6 @@ function stopSimulator() {
 }
 
 module.exports = {
-  startSimulator, stopSimulator, seedAccounts, emitTransaction, generateTransaction,
+  startSimulator, stopSimulator, setMlPipeline, seedAccounts, emitTransaction, generateTransaction,
   scenarios: { layering: simulateLayering, structuring: simulateStructuring, fanout: simulateFanOut, dormant: simulateDormantActivation, mule: simulateMule },
 };

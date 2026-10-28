@@ -22,6 +22,8 @@ const accountSchema = new mongoose.Schema({
   total_outgoing: { type: Number, default: 0 },
   tx_count: { type: Number, default: 0 },
   opened_at: { type: Date, default: Date.now },
+  // GNN account-risk (separate from the rule-engine risk_score above)
+  gnn_risk_score: Number, gnn_risk_level: String, gnn_flagged: Boolean, gnn_updated_at: Date, gnn_model_version: String,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Account', accountSchema);

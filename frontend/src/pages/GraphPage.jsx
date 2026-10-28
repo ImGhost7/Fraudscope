@@ -48,7 +48,8 @@ function NodePanel({ node, onClose }) {
           ['KYC Level', node.kyc_level],
           ['Status', node.status],
           ['Branch', node.branch],
-          ['Risk Score', node.risk_score],
+          ['Rule-engine Risk Score', node.risk_score],
+          ['GNN Risk (neighbourhood model)', typeof node.gnn_risk_score === 'number' ? `${Math.round(node.gnn_risk_score)} · ${node.gnn_risk_level}` : 'not analysed'],
           ['Balance', node.balance ? `₹${Number(node.balance).toLocaleString('en-IN')}` : '-'],
         ].map(([label, value, mono]) => (
           <div key={label} style={{ marginBottom: 6 }}>
@@ -57,6 +58,11 @@ function NodePanel({ node, onClose }) {
           </div>
         ))}
       </div>
+      {node.gnn_flagged && (
+        <div data-testid="node-gnn-flag" style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.35)' }}>
+          <span style={{ fontSize: 11, color: '#a78bfa', fontWeight: 700 }}>◌ FLAGGED BY GNN — neighbourhood risk pattern</span>
+        </div>
+      )}
       {node.is_flagged && (
         <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, background: 'rgba(200,40,40,0.1)', border: '1px solid rgba(200,40,40,0.3)' }}>
           <span style={{ fontSize: 11, color: 'var(--danger-2)', fontWeight: 700 }}>⚠ FLAGGED FOR INVESTIGATION</span>
@@ -211,6 +217,11 @@ export default function GraphPage() {
     const color  = isFlagged ? '#e03434' : (NODE_TYPE_COLORS[node.type] || '#1a6cbc');
     const radius = Math.max(4, (node.risk_score || 0) / 14) + (isSelected ? 3 : 0);
 
+    if (node.gnn_flagged) {                      // dashed purple ring = flagged by the GNN (distinct from rule-based red)
+      ctx.beginPath(); ctx.setLineDash([3, 2]);
+      ctx.arc(node.x, node.y, radius + 7, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]);
+    }
     if (isFlagged || isSelected) {
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius + 5, 0, 2 * Math.PI);
@@ -361,13 +372,15 @@ export default function GraphPage() {
           { color: '#1a6cbc', label: 'Savings',   dot: true },
           { color: '#c98520', label: 'Shell',      dot: true },
           { color: '#e03434', label: 'Mule/Flagged', dot: true },
+          { color: '#a78bfa', label: 'GNN-flagged (ring)', ring: true },
           { color: '#c82828', label: 'Layering',   line: true },
           { color: '#c98520', label: 'Structuring', line: true },
           { color: '#c9a84c', label: 'Dormant',    line: true },
           { color: '#16a870', label: 'Fan-Out',    line: true },
-        ].map(({ color, label, dot, line }) => (
+        ].map(({ color, label, dot, line, ring }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             {dot  && <div style={{ width: 9, height: 9, borderRadius: '50%', background: color }} />}
+            {ring && <div style={{ width: 11, height: 11, borderRadius: '50%', border: `1.5px dashed ${color}` }} />}
             {line && <div style={{ width: 18, height: 2.5, background: color, borderRadius: 2 }} />}
             <span style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 500 }}>{label}</span>
           </div>

@@ -89,4 +89,11 @@ export const rulesApi = {
   dryRun: (data) => api.post('/rules/dry-run', data),
 };
 
+// ML layers (Isolation Forest + GNN + risk fusion)
+export const mlApi = {
+  getStatus: () => api.get('/ml/status'),
+  getGnnAccounts: (params) => api.get('/ml/gnn/accounts', { params }),
+  getGnnAccount: (id) => api.get(`/ml/gnn/accounts/${id}`),
+};
+
 export default api;

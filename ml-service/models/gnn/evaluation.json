@@ -1,0 +1,874 @@
+{
+ "counts": {
+  "train": {
+   "snapshots": 101,
+   "nodes": 161760,
+   "positives": 2508
+  },
+  "val": {
+   "snapshots": 29,
+   "nodes": 46862,
+   "positives": 527
+  },
+  "test": {
+   "snapshots": 37,
+   "nodes": 59723,
+   "positives": 1475
+  }
+ },
+ "gnn_seeds": [
+  {
+   "seed": 0,
+   "precision": 0.9637943519188994,
+   "recall": 0.9023728813559322,
+   "f1": 0.9320728291316527,
+   "false_positive_rate": 0.0008583985716247768,
+   "false_negatives": 144,
+   "false_positives": 50,
+   "true_positives": 1331,
+   "true_negatives": 58198,
+   "roc_auc": 0.9979247821704506,
+   "pr_auc": 0.9749531786750979,
+   "recall_at_fpr_1pct": 0.9810169491525423,
+   "recall_at_fpr_5pct": 0.991864406779661
+  },
+  {
+   "seed": 1,
+   "precision": 0.9835596854896355,
+   "recall": 0.9328813559322033,
+   "f1": 0.9575504523312457,
+   "false_positive_rate": 0.00039486334294739733,
+   "false_negatives": 99,
+   "false_positives": 23,
+   "true_positives": 1376,
+   "true_negatives": 58225,
+   "roc_auc": 0.9976590568905835,
+   "pr_auc": 0.9859083620168567,
+   "recall_at_fpr_1pct": 0.9871186440677966,
+   "recall_at_fpr_5pct": 0.991864406779661
+  },
+  {
+   "seed": 2,
+   "precision": 0.9632248939179632,
+   "recall": 0.9233898305084746,
+   "f1": 0.9428868120456906,
+   "false_positive_rate": 0.0008927345144897679,
+   "false_negatives": 113,
+   "false_positives": 52,
+   "true_positives": 1362,
+   "true_negatives": 58196,
+   "roc_auc": 0.9976340207505487,
+   "pr_auc": 0.9802011113104774,
+   "recall_at_fpr_1pct": 0.9789830508474576,
+   "recall_at_fpr_5pct": 0.9932203389830508
+  }
+ ],
+ "split": {
+  "strategy": "temporal split with disjoint windows (no window crosses a period boundary) + scenario-instance grouping; test period uses shifted scenario parameters and an unseen scenario family (round_trip)",
+  "bounds_days": {
+   "train": [
+    0.0,
+    26.0
+   ],
+   "val": [
+    26.0,
+    34.0
+   ],
+   "test": [
+    34.0,
+    44.0
+   ]
+  },
+  "window_hours": 24.0,
+  "stride_hours": 6.0
+ },
+ "methods": {
+  "fusion_tuned_on_validation": {
+   "metrics": {
+    "precision": [
+     0.9688176286192661,
+     0.01187877891635637
+    ],
+    "recall": [
+     0.9238418079096045,
+     0.008009059953296859
+    ],
+    "f1": [
+     0.9457653208067308,
+     0.008448261726787878
+    ],
+    "false_positive_rate": [
+     0.0007553907430298037,
+     0.00029135013645922853
+    ],
+    "false_negatives": [
+     112.33333333333333,
+     11.8133634311129
+    ],
+    "false_positives": [
+     44.0,
+     16.97056274847714
+    ],
+    "true_positives": [
+     1362.6666666666667,
+     11.8133634311129
+    ],
+    "true_negatives": [
+     58204.0,
+     16.97056274847714
+    ],
+    "roc_auc": [
+     0.9933570639315858,
+     0.0012114701414940425
+    ],
+    "pr_auc": [
+     0.9681430836991322,
+     0.005501103360153009
+    ],
+    "recall_at_fpr_1pct": [
+     0.971847499476878,
+     0.004543816000731386
+    ],
+    "recall_at_fpr_5pct": [
+     0.9764209553158706,
+     0.003958400337634554
+    ]
+   },
+   "per_scenario_recall": {
+    "dormant/base": {
+     "n": 84,
+     "recall": 1.0
+    },
+    "dormant/shifted": {
+     "n": 54,
+     "recall": 0.6790123456790124
+    },
+    "fan_out/base": {
+     "n": 359,
+     "recall": 1.0
+    },
+    "fan_out/shifted": {
+     "n": 346,
+     "recall": 0.9007707129094413
+    },
+    "layering/base": {
+     "n": 108,
+     "recall": 1.0
+    },
+    "layering/shifted": {
+     "n": 179,
+     "recall": 0.9106145251396648
+    },
+    "mule/base": {
+     "n": 30,
+     "recall": 1.0
+    },
+    "mule/shifted": {
+     "n": 40,
+     "recall": 0.8583333333333334
+    },
+    "round_trip/unseen_family": {
+     "n": 178,
+     "recall": 0.9176029962546816
+    },
+    "structuring/base": {
+     "n": 18,
+     "recall": 0.6666666666666666
+    },
+    "structuring/shifted": {
+     "n": 29,
+     "recall": 0.4597701149425288
+    },
+    "velocity/base": {
+     "n": 20,
+     "recall": 0.9500000000000001
+    },
+    "velocity/shifted": {
+     "n": 30,
+     "recall": 0.9444444444444445
+    }
+   },
+   "runs": 3
+  },
+  "rules_only": {
+   "metrics": {
+    "precision": [
+     0.04229179424372321,
+     0.0
+    ],
+    "recall": [
+     0.7491525423728813,
+     0.0
+    ],
+    "f1": [
+     0.0800637611853784,
+     0.0
+    ],
+    "false_positive_rate": [
+     0.4295941491553357,
+     5.551115123125783e-17
+    ],
+    "false_negatives": [
+     370.0,
+     0.0
+    ],
+    "false_positives": [
+     25023.0,
+     0.0
+    ],
+    "true_positives": [
+     1105.0,
+     0.0
+    ],
+    "true_negatives": [
+     33225.0,
+     0.0
+    ],
+    "roc_auc": [
+     0.7262777160894737,
+     0.0
+    ],
+    "pr_auc": [
+     0.07846584760726953,
+     0.0
+    ],
+    "recall_at_fpr_1pct": [
+     0.08454947538337369,
+     0.0
+    ],
+    "recall_at_fpr_5pct": [
+     0.2585443575596396,
+     0.0
+    ]
+   },
+   "per_scenario_recall": {
+    "dormant/base": {
+     "n": 84,
+     "recall": 0.6666666666666666
+    },
+    "dormant/shifted": {
+     "n": 54,
+     "recall": 0.8148148148148148
+    },
+    "fan_out/base": {
+     "n": 359,
+     "recall": 0.6267409470752089
+    },
+    "fan_out/shifted": {
+     "n": 346,
+     "recall": 0.684971098265896
+    },
+    "layering/base": {
+     "n": 108,
+     "recall": 0.8240740740740741
+    },
+    "layering/shifted": {
+     "n": 179,
+     "recall": 0.9664804469273743
+    },
+    "mule/base": {
+     "n": 30,
+     "recall": 0.9
+    },
+    "mule/shifted": {
+     "n": 40,
+     "recall": 0.85
+    },
+    "round_trip/unseen_family": {
+     "n": 178,
+     "recall": 0.9325842696629213
+    },
+    "structuring/base": {
+     "n": 18,
+     "recall": 0.2777777777777778
+    },
+    "structuring/shifted": {
+     "n": 29,
+     "recall": 0.5172413793103449
+    },
+    "velocity/base": {
+     "n": 20,
+     "recall": 0.9
+    },
+    "velocity/shifted": {
+     "n": 30,
+     "recall": 0.5333333333333333
+    }
+   },
+   "runs": 3
+  },
+  "rules_only_high_threshold_60": {
+   "metrics": {
+    "precision": [
+     0.07722564573226695,
+     0.0
+    ],
+    "recall": [
+     0.39932203389830506,
+     0.0
+    ],
+    "f1": [
+     0.12942210503186113,
+     0.0
+    ],
+    "false_positive_rate": [
+     0.1208281829419036,
+     1.3877787807814457e-17
+    ],
+    "false_negatives": [
+     886.0,
+     0.0
+    ],
+    "false_positives": [
+     7038.0,
+     0.0
+    ],
+    "true_positives": [
+     589.0,
+     0.0
+    ],
+    "true_negatives": [
+     51210.0,
+     0.0
+    ],
+    "roc_auc": [
+     0.7262777160894737,
+     0.0
+    ],
+    "pr_auc": [
+     0.07846584760726953,
+     0.0
+    ],
+    "recall_at_fpr_1pct": [
+     0.08454947538337369,
+     0.0
+    ],
+    "recall_at_fpr_5pct": [
+     0.2585443575596396,
+     0.0
+    ]
+   },
+   "per_scenario_recall": {
+    "dormant/base": {
+     "n": 84,
+     "recall": 0.13095238095238096
+    },
+    "dormant/shifted": {
+     "n": 54,
+     "recall": 0.5740740740740741
+    },
+    "fan_out/base": {
+     "n": 359,
+     "recall": 0.18662952646239553
+    },
+    "fan_out/shifted": {
+     "n": 346,
+     "recall": 0.19653179190751446
+    },
+    "layering/base": {
+     "n": 108,
+     "recall": 0.5462962962962963
+    },
+    "layering/shifted": {
+     "n": 179,
+     "recall": 0.7932960893854749
+    },
+    "mule/base": {
+     "n": 30,
+     "recall": 0.8666666666666667
+    },
+    "mule/shifted": {
+     "n": 40,
+     "recall": 0.5
+    },
+    "round_trip/unseen_family": {
+     "n": 178,
+     "recall": 0.7808988764044944
+    },
+    "structuring/base": {
+     "n": 18,
+     "recall": 0.2222222222222222
+    },
+    "structuring/shifted": {
+     "n": 29,
+     "recall": 0.06896551724137931
+    },
+    "velocity/base": {
+     "n": 20,
+     "recall": 0.5
+    },
+    "velocity/shifted": {
+     "n": 30,
+     "recall": 0.3333333333333333
+    }
+   },
+   "runs": 3
+  },
+  "isolation_forest_only": {
+   "metrics": {
+    "precision": [
+     1.0,
+     0.0
+    ],
+    "recall": [
+     0.033220338983050844,
+     0.0
+    ],
+    "f1": [
+     0.06430446194225722,
+     0.0
+    ],
+    "false_positive_rate": [
+     0.0,
+     0.0
+    ],
+    "false_negatives": [
+     1426.0,
+     0.0
+    ],
+    "false_positives": [
+     0.0,
+     0.0
+    ],
+    "true_positives": [
+     49.0,
+     0.0
+    ],
+    "true_negatives": [
+     58248.0,
+     0.0
+    ],
+    "roc_auc": [
+     0.9215399612178435,
+     0.0
+    ],
+    "pr_auc": [
+     0.4665788640759752,
+     5.551115123125783e-17
+    ],
+    "recall_at_fpr_1pct": [
+     0.38047845036319616,
+     0.0
+    ],
+    "recall_at_fpr_5pct": [
+     0.5720582477918358,
+     0.0
+    ]
+   },
+   "per_scenario_recall": {
+    "dormant/base": {
+     "n": 84,
+     "recall": 0.0
+    },
+    "dormant/shifted": {
+     "n": 54,
+     "recall": 0.0
+    },
+    "fan_out/base": {
+     "n": 359,
+     "recall": 0.0
+    },
+    "fan_out/shifted": {
+     "n": 346,
+     "recall": 0.0
+    },
+    "layering/base": {
+     "n": 108,
+     "recall": 0.0
+    },
+    "layering/shifted": {
+     "n": 179,
+     "recall": 0.0446927374301676
+    },
+    "mule/base": {
+     "n": 30,
+     "recall": 0.0
+    },
+    "mule/shifted": {
+     "n": 40,
+     "recall": 0.0
+    },
+    "round_trip/unseen_family": {
+     "n": 178,
+     "recall": 0.2303370786516854
+    },
+    "structuring/base": {
+     "n": 18,
+     "recall": 0.0
+    },
+    "structuring/shifted": {
+     "n": 29,
+     "recall": 0.0
+    },
+    "velocity/base": {
+     "n": 20,
+     "recall": 0.0
+    },
+    "velocity/shifted": {
+     "n": 30,
+     "recall": 0.0
+    }
+   },
+   "runs": 3
+  },
+  "rules_plus_isolation_forest": {
+   "metrics": {
+    "precision": [
+     0.04229179424372321,
+     0.0
+    ],
+    "recall": [
+     0.7491525423728813,
+     0.0
+    ],
+    "f1": [
+     0.0800637611853784,
+     0.0
+    ],
+    "false_positive_rate": [
+     0.4295941491553357,
+     5.551115123125783e-17
+    ],
+    "false_negatives": [
+     370.0,
+     0.0
+    ],
+    "false_positives": [
+     25023.0,
+     0.0
+    ],
+    "true_positives": [
+     1105.0,
+     0.0
+    ],
+    "true_negatives": [
+     33225.0,
+     0.0
+    ],
+    "roc_auc": [
+     0.7721282115745881,
+     1.1102230246251565e-16
+    ],
+    "pr_auc": [
+     0.08168288012465362,
+     0.0
+    ],
+    "recall_at_fpr_1pct": [
+     0.08454947538337369,
+     0.0
+    ],
+    "recall_at_fpr_5pct": [
+     0.2585443575596396,
+     0.0
+    ]
+   },
+   "per_scenario_recall": {
+    "dormant/base": {
+     "n": 84,
+     "recall": 0.6666666666666666
+    },
+    "dormant/shifted": {
+     "n": 54,
+     "recall": 0.8148148148148148
+    },
+    "fan_out/base": {
+     "n": 359,
+     "recall": 0.6267409470752089
+    },
+    "fan_out/shifted": {
+     "n": 346,
+     "recall": 0.684971098265896
+    },
+    "layering/base": {
+     "n": 108,
+     "recall": 0.8240740740740741
+    },
+    "layering/shifted": {
+     "n": 179,
+     "recall": 0.9664804469273743
+    },
+    "mule/base": {
+     "n": 30,
+     "recall": 0.9
+    },
+    "mule/shifted": {
+     "n": 40,
+     "recall": 0.85
+    },
+    "round_trip/unseen_family": {
+     "n": 178,
+     "recall": 0.9325842696629213
+    },
+    "structuring/base": {
+     "n": 18,
+     "recall": 0.2777777777777778
+    },
+    "structuring/shifted": {
+     "n": 29,
+     "recall": 0.5172413793103449
+    },
+    "velocity/base": {
+     "n": 20,
+     "recall": 0.9
+    },
+    "velocity/shifted": {
+     "n": 30,
+     "recall": 0.5333333333333333
+    }
+   },
+   "runs": 3
+  },
+  "gnn_only": {
+   "metrics": {
+    "precision": [
+     0.9701929771088326,
+     0.009454548827831503
+    ],
+    "recall": [
+     0.91954802259887,
+     0.01274784612535181
+    ],
+    "f1": [
+     0.9441700311695297,
+     0.01044069951248318
+    ],
+    "false_positive_rate": [
+     0.0007153321430206474,
+     0.00022703880447829248
+    ],
+    "false_negatives": [
+     118.66666666666667,
+     18.803073034893938
+    ],
+    "false_positives": [
+     41.666666666666664,
+     13.224556283251582
+    ],
+    "true_positives": [
+     1356.3333333333333,
+     18.80307303489394
+    ],
+    "true_negatives": [
+     58206.333333333336,
+     13.224556283251582
+    ],
+    "roc_auc": [
+     0.9977392866038609,
+     0.00013156280121488236
+    ],
+    "pr_auc": [
+     0.9803542173341441,
+     0.004473745008658834
+    ],
+    "recall_at_fpr_1pct": [
+     0.9823728813559321,
+     0.0034569623820967996
+    ],
+    "recall_at_fpr_5pct": [
+     0.9923163841807909,
+     0.0006391925705641008
+    ]
+   },
+   "per_scenario_recall": {
+    "dormant/base": {
+     "n": 84,
+     "recall": 1.0
+    },
+    "dormant/shifted": {
+     "n": 54,
+     "recall": 0.6481481481481481
+    },
+    "fan_out/base": {
+     "n": 359,
+     "recall": 1.0
+    },
+    "fan_out/shifted": {
+     "n": 346,
+     "recall": 0.8998073217726397
+    },
+    "layering/base": {
+     "n": 108,
+     "recall": 0.9969135802469135
+    },
+    "layering/shifted": {
+     "n": 179,
+     "recall": 0.888268156424581
+    },
+    "mule/base": {
+     "n": 30,
+     "recall": 1.0
+    },
+    "mule/shifted": {
+     "n": 40,
+     "recall": 0.8583333333333334
+    },
+    "round_trip/unseen_family": {
+     "n": 178,
+     "recall": 0.9101123595505619
+    },
+    "structuring/base": {
+     "n": 18,
+     "recall": 0.6851851851851851
+    },
+    "structuring/shifted": {
+     "n": 29,
+     "recall": 0.4827586206896552
+    },
+    "velocity/base": {
+     "n": 20,
+     "recall": 0.9666666666666667
+    },
+    "velocity/shifted": {
+     "n": 30,
+     "recall": 0.9444444444444445
+    }
+   },
+   "runs": 3
+  },
+  "fusion_rules_if_gnn": {
+   "metrics": {
+    "precision": [
+     0.16554042037931052,
+     0.0006565613835861369
+    ],
+    "recall": [
+     0.9568361581920902,
+     0.00261600833961362
+    ],
+    "f1": [
+     0.2822492368676965,
+     0.001053016718705623
+    ],
+    "false_positive_rate": [
+     0.12213867142791741,
+     0.0003423086670498089
+    ],
+    "false_negatives": [
+     63.666666666666664,
+     3.8586123009300755
+    ],
+    "false_positives": [
+     7114.333333333333,
+     19.93879523831757
+    ],
+    "true_positives": [
+     1411.3333333333333,
+     3.8586123009300755
+    ],
+    "true_negatives": [
+     51133.666666666664,
+     19.93879523831757
+    ],
+    "roc_auc": [
+     0.9082177511780914,
+     0.0008603279210429509
+    ],
+    "pr_auc": [
+     0.13206471271373008,
+     0.00041330067584977785
+    ],
+    "recall_at_fpr_1pct": [
+     0.08454947538337369,
+     0.0
+    ],
+    "recall_at_fpr_5pct": [
+     0.29510292541579014,
+     0.0005280181914211813
+    ]
+   },
+   "per_scenario_recall": {
+    "dormant/base": {
+     "n": 84,
+     "recall": 0.9761904761904763
+    },
+    "dormant/shifted": {
+     "n": 54,
+     "recall": 0.8148148148148149
+    },
+    "fan_out/base": {
+     "n": 359,
+     "recall": 0.9944289693593314
+    },
+    "fan_out/shifted": {
+     "n": 346,
+     "recall": 0.9161849710982658
+    },
+    "layering/base": {
+     "n": 108,
+     "recall": 1.0
+    },
+    "layering/shifted": {
+     "n": 179,
+     "recall": 1.0
+    },
+    "mule/base": {
+     "n": 30,
+     "recall": 1.0
+    },
+    "mule/shifted": {
+     "n": 40,
+     "recall": 1.0
+    },
+    "round_trip/unseen_family": {
+     "n": 178,
+     "recall": 0.9812734082397004
+    },
+    "structuring/base": {
+     "n": 18,
+     "recall": 0.7592592592592592
+    },
+    "structuring/shifted": {
+     "n": 29,
+     "recall": 0.6206896551724138
+    },
+    "velocity/base": {
+     "n": 20,
+     "recall": 0.9833333333333334
+    },
+    "velocity/shifted": {
+     "n": 30,
+     "recall": 0.9444444444444443
+    }
+   },
+   "runs": 3
+  }
+ },
+ "fusion_tuned_configs": [
+  {
+   "weights": {
+    "rules": 0.1,
+    "isolation_forest": 0.2,
+    "gnn": 0.7
+   },
+   "rule_floor": 101,
+   "val_f1": 0.9665711556829035
+  },
+  {
+   "weights": {
+    "rules": 0.1,
+    "isolation_forest": 0.0,
+    "gnn": 0.5
+   },
+   "rule_floor": 101,
+   "val_f1": 0.9788461538461538
+  },
+  {
+   "weights": {
+    "rules": 0.1,
+    "isolation_forest": 0.2,
+    "gnn": 0.3
+   },
+   "rule_floor": 101,
+   "val_f1": 0.9707271010387157
+  }
+ ],
+ "fusion_default_config": {
+  "weights": {
+   "rules": 0.5,
+   "isolation_forest": 0.2,
+   "gnn": 0.3
+  },
+  "rule_floor": 60
+ },
+ "alignment": "Transaction-level detectors are aligned to account level per snapshot: an account is flagged if it is sender or receiver of any flagged transaction in the window; score = max over those transactions. Rules/IF use their native decisions (rule alert threshold 30 / Isolation Forest is_anomaly); GNN and fusion thresholds are chosen on the validation period."
+}

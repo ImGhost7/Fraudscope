@@ -1,0 +1,73 @@
+{
+ "model_version": "1.0.0",
+ "trained_at": "2026-10-28T22:04:39.637792+00:00",
+ "seed": 2,
+ "decision_threshold": 0.7524522542953491,
+ "hyperparameters": {
+  "hidden": 64,
+  "layers": 2,
+  "dropout": 0.3,
+  "lr": 0.003,
+  "weight_decay": 0.0001,
+  "epochs": 60,
+  "patience": 10,
+  "max_pos_weight": 20.0
+ },
+ "best_epoch": 15,
+ "val_pr_auc": 0.992639010922039,
+ "test_metrics": {
+  "seed": 2,
+  "precision": 0.9632248939179632,
+  "recall": 0.9233898305084746,
+  "f1": 0.9428868120456906,
+  "false_positive_rate": 0.0008927345144897679,
+  "false_negatives": 113,
+  "false_positives": 52,
+  "true_positives": 1362,
+  "true_negatives": 58196,
+  "roc_auc": 0.9976340207505487,
+  "pr_auc": 0.9802011113104774,
+  "recall_at_fpr_1pct": 0.9789830508474576,
+  "recall_at_fpr_5pct": 0.9932203389830508
+ },
+ "data": {
+  "train": {
+   "snapshots": 101,
+   "nodes": 161760,
+   "positives": 2508
+  },
+  "val": {
+   "snapshots": 29,
+   "nodes": 46862,
+   "positives": 527
+  },
+  "test": {
+   "snapshots": 37,
+   "nodes": 59723,
+   "positives": 1475
+  }
+ },
+ "sim_config": {
+  "seed": 7,
+  "n_accounts": 3000,
+  "train_days": 26,
+  "val_days": 8,
+  "test_days": 10,
+  "normal_tx_per_day": 1100,
+  "scenarios_per_day": {
+   "layering": 1.2,
+   "structuring": 1.2,
+   "fan_out": 1.2,
+   "mule": 1.0,
+   "dormant": 0.9,
+   "velocity": 1.0
+  },
+  "shifted_fraction_test": 0.5,
+  "round_trip_per_day_test": 1.0,
+  "guard_hours": 4.0
+ },
+ "torch": "2.15.0+cu132",
+ "python": "3.13.17",
+ "smoke": false,
+ "training_seconds": 422.96555280685425
+}

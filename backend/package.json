@@ -7,7 +7,7 @@
     "dev": "node --watch server.js",
     "demo": "node mock-server.js",
     "demo:watch": "node --watch mock-server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/*.test.js"
   },
   "keywords": [],
   "author": "",
@@ -27,5 +27,8 @@
     "node-cron": "^4.2.1",
     "socket.io": "^4.8.3",
     "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
   }
 }

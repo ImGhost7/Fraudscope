@@ -34,3 +34,6 @@ Thumbs.db
 ml-service/gnn/results/raw.pkl
 ml-service/gnn/results/transactions.csv
 ml-service/gnn/results/test_scores.csv
+
+# GNN training scratch space (replayed rule-engine output, datasets)
+ml-service/models/gnn/work/

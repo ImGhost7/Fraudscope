@@ -240,6 +240,14 @@ def extract_features_legacy(tx: LegacyTransactionFeatures) -> list:
 # Model training
 # ─────────────────────────────────────────────────────────────────────────────
 
+def normalized_if_risk(decision_value: float) -> float:
+    """Monotone 0-100 risk from the Isolation Forest's own decision function (boundary = 50).
+
+    The legacy `fraud_probability` is a heuristic that maps almost every input to 76-89; this additive field is
+    anchored on the model's trained decision boundary instead.  It is an anomaly indicator, not a probability."""
+    return float(max(0.0, min(100.0, 50.0 - 250.0 * decision_value)))
+
+
 def get_or_train_model():
     global model, scaler
     if model is not None:
@@ -325,6 +333,14 @@ def get_or_train_model():
 # Startup
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ── GNN layer (GraphSAGE account-risk model) ─────────────────────────────────────────────
+try:
+    from fraud_gnn.api import router as gnn_router
+    app.include_router(gnn_router)
+except Exception as _e:  # noqa: BLE001 - the existing service must still start without torch
+    print(f"[GNN] layer not mounted: {type(_e).__name__}")
+
+
 @app.on_event("startup")
 async def startup():
     get_or_train_model()
@@ -354,10 +370,11 @@ def predict_single(tx: RichTransactionFeatures):
     X = sc.transform([features])
     score = clf.score_samples(X)[0]
     prediction = clf.predict(X)[0]
+    margin = float(clf.decision_function(X)[0])
 
     # Normalize: more negative anomaly_score => higher fraud probability
     fraud_prob = max(0, min(100, int((-score + 0.5) * 80)))
-    is_anomaly = prediction == -1
+    is_anomaly = bool(prediction == -1)
 
     # If rule_engine_score is already high, boost the ML output slightly
     # This implements the "ML as second layer" design principle
@@ -382,6 +399,8 @@ def predict_single(tx: RichTransactionFeatures):
         "risk_level": risk_level,
         "rule_engine_score": rule_score,
         "feature_count": len(FEATURE_COLUMNS),
+        "decision_function": round(margin, 4),            # additive (v2.1): < 0 means anomaly by the model's own threshold
+        "normalized_risk": round(normalized_if_risk(margin), 1),
     }
 
 
@@ -396,7 +415,7 @@ def predict_legacy(tx: LegacyTransactionFeatures):
     fraud_prob = max(0, min(100, int((-score + 0.5) * 80)))
     return {
         "tx_id": tx.tx_id,
-        "is_anomaly": prediction == -1,
+        "is_anomaly": bool(prediction == -1),
         "anomaly_score": round(float(score), 4),
         "fraud_probability": fraud_prob,
         "risk_level": "CRITICAL" if fraud_prob >= 80 else "HIGH" if fraud_prob >= 60 else "MEDIUM" if fraud_prob >= 40 else "LOW",
@@ -412,6 +431,7 @@ def predict_batch(req: BatchRequest):
     X = sc.transform(features_list)
     scores = clf.score_samples(X)
     predictions = clf.predict(X)
+    margins = clf.decision_function(X)
 
     results = []
     for i, tx in enumerate(req.transactions):
@@ -423,10 +443,12 @@ def predict_batch(req: BatchRequest):
             fraud_prob = min(100, fraud_prob + 15)
         results.append({
             "tx_id": tx.tx_id,
-            "is_anomaly": pred == -1,
+            "is_anomaly": bool(pred == -1),
             "anomaly_score": round(float(score), 4),
             "fraud_probability": fraud_prob,
             "risk_level": "CRITICAL" if fraud_prob >= 80 else "HIGH" if fraud_prob >= 60 else "MEDIUM" if fraud_prob >= 40 else "LOW",
+            "decision_function": round(float(margins[i]), 4),
+            "normalized_risk": round(normalized_if_risk(float(margins[i])), 1),
         })
 
     return {

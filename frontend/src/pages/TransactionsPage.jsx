@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { txApi } from '../services/api';
+import DetectorBreakdown from '../components/gnn/DetectorBreakdown';
 import { useSocket } from '../contexts/SocketContext';
 import { Filter, AlertTriangle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -50,6 +51,7 @@ export default function TransactionsPage() {
   const [allTxs, setAllTxs] = useState([]);
   const [filter, setFilter] = useState({ flagged: false, fraud_type: 'ALL' });
   const [newIds, setNewIds] = useState(new Set());
+  const [selectedTx, setSelectedTx] = useState(null);
   const tableRef = useRef(null);
 
   // When fraud engine finishes (async), update the enriched tx in allTxs in-place
@@ -169,6 +171,7 @@ export default function TransactionsPage() {
                 <th>Amount (INR)</th>
                 <th>Type</th>
                 <th>Risk Score</th>
+                <th title="Fused Rules + Isolation Forest + GNN">Final Risk</th>
                 <th>Fraud Type</th>
                 <th>Status</th>
                 <th>Timestamp</th>
@@ -176,18 +179,20 @@ export default function TransactionsPage() {
             </thead>
             <tbody>
               {isLoading && displayed.length === 0 ? (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40 }}>
+                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40 }}>
                   <div className="spinner" style={{ margin: '0 auto' }} />
                 </td></tr>
               ) : displayed.length === 0 ? (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>
+                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>
                   No transactions yet. Simulator starting...
                 </td></tr>
               ) : displayed.map((tx, i) => (
                 <tr
                   key={tx.tx_id || i}
                   className={tx.anomaly_flag ? 'flagged' : ''}
+                  onClick={() => setSelectedTx(tx)}
                   style={{
+                    cursor: 'pointer',
                     animation: newIds.has(tx.tx_id) ? 'slideInRow 0.5s ease-out' : undefined,
                     borderLeft: tx.anomaly_flag ? '3px solid var(--danger-2)' : '3px solid transparent'
                   }}
@@ -200,6 +205,7 @@ export default function TransactionsPage() {
                   </td>
                   <td><TxBadge label={tx.transaction_type} /></td>
                   <td><RiskBar score={tx.risk_score || 0} /></td>
+                  <td data-testid="final-risk">{typeof tx.final_risk_score === 'number' ? <RiskBar score={tx.final_risk_score} /> : <span style={{ fontSize: 11, color: 'var(--text-3)' }}>pending</span>}</td>
                   <td>
                     <TxBadge type="fraud" label={tx.fraud_type || 'NONE'} />
                   </td>
@@ -218,6 +224,26 @@ export default function TransactionsPage() {
           </table>
         </div>
       </div>
+
+      {selectedTx && (() => {
+        const sel = displayed.find(t => t.tx_id === selectedTx.tx_id) || selectedTx;
+        return (
+          <div className="modal-backdrop" onClick={() => setSelectedTx(null)}>
+            <div className="glass-card" style={{ width: 640, maxWidth: '92vw', maxHeight: '86vh', overflowY: 'auto', padding: 24 }} onClick={e => e.stopPropagation()} data-testid="tx-detail">
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'JetBrains Mono, monospace' }}>{sel.tx_id}</div>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-1)', marginTop: 4 }}>
+                    {sel.sender} → {sel.receiver} · ₹{Number(sel.amount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </h3>
+                </div>
+                <button onClick={() => setSelectedTx(null)} className="btn-ghost" style={{ height: 30 }}>Close</button>
+              </div>
+              <DetectorBreakdown detectors={sel.detectors} finalScore={sel.final_risk_score} finalLevel={sel.final_risk_level} />
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -95,17 +95,18 @@ export default function AccountsPage() {
                 <th>Branch</th>
                 <th>Balance (INR)</th>
                 <th>Risk Score</th>
+                <th title="Graph neural network account risk">GNN Risk</th>
                 <th>Flag</th>
                 <th>Last Active</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40 }}>
+                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40 }}>
                   <div className="spinner" style={{ margin: '0 auto' }} />
                 </td></tr>
               ) : accounts.length === 0 ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>No accounts found</td></tr>
+                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>No accounts found</td></tr>
               ) : accounts.map(acc => (
                 <tr key={acc.account_id} className={acc.is_flagged ? 'flagged' : ''} style={{ borderLeft: acc.is_flagged ? '3px solid var(--danger-2)' : '3px solid transparent' }}>
                   <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--blue-2)' }}>{acc.account_id}</td>
@@ -130,6 +131,11 @@ export default function AccountsPage() {
                     ₹{Number(acc.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                   </td>
                   <td><RiskBar score={Math.min(acc.risk_score || 0, 100)} /></td>
+                  <td data-testid="gnn-risk-cell" title={acc.gnn_updated_at ? `GNN analysis ${new Date(acc.gnn_updated_at).toLocaleTimeString('en-IN')}` : 'No GNN analysis yet'}>
+                    {typeof acc.gnn_risk_score === 'number'
+                      ? <span style={{ fontWeight: 800, fontSize: 12, color: acc.gnn_flagged ? 'var(--danger-2)' : 'var(--text-2)' }}>{Math.round(acc.gnn_risk_score)}<span style={{ fontSize: 9.5, marginLeft: 5, color: 'var(--text-3)' }}>{acc.gnn_risk_level}</span></span>
+                      : <span style={{ fontSize: 11, color: 'var(--text-3)' }}>—</span>}
+                  </td>
                   <td>
                     {acc.is_flagged
                       ? <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--danger-2)', fontWeight: 600 }}><AlertTriangle size={13} />Flagged</span>

@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { alertApi, investigationApi } from '../services/api';
+import DetectorBreakdown from '../components/gnn/DetectorBreakdown';
 import { useSocket } from '../contexts/SocketContext';
 import { useState } from 'react';
 import { Bell, AlertTriangle, Clock, Shield, ChevronRight } from 'lucide-react';
@@ -21,6 +22,7 @@ const ALERT_TYPE_DESC = {
   MULE_BEHAVIOUR: 'Pass-through account with near-zero balance retention',
   HIGH_VELOCITY: 'Abnormal transaction frequency detected',
   GEO_ANOMALY: 'Geographic transaction anomaly',
+  GNN_ACCOUNT_RISK: 'Graph neural network flagged this account from its transaction neighbourhood',
 };
 
 function AlertCard({ alert, onAction }) {
@@ -92,6 +94,22 @@ function AlertCard({ alert, onAction }) {
           {expanded && alert.description && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, marginBottom: 12 }}>
               <p style={{ fontSize: 12.5, color: 'var(--text-2)', lineHeight: 1.5 }}>{alert.description}</p>
+            </div>
+          )}
+
+          {expanded && (alert.metadata?.detectors || alert.alert_type === 'GNN_ACCOUNT_RISK') && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, marginBottom: 12 }} onClick={e => e.stopPropagation()}>
+              <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-3)', marginBottom: 6 }}>DETECTION EVIDENCE</div>
+              {alert.alert_type === 'GNN_ACCOUNT_RISK' ? (
+                <div data-testid="gnn-alert-evidence">
+                  {[...(alert.metadata?.detectors?.gnn?.topological_evidence || []), ...(alert.metadata?.detectors?.gnn?.model_evidence || [])].map(e => (
+                    <div key={e} style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>• {e}</div>
+                  ))}
+                  <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 6 }}>GNN risk {Math.round(alert.risk_score)} · model v{alert.metadata?.detectors?.gnn?.model_version || '?'} · account-level statistical indicator, not proof of laundering.</div>
+                </div>
+              ) : (
+                <DetectorBreakdown detectors={alert.metadata.detectors} finalScore={alert.final_risk_score} />
+              )}
             </div>
           )}
 

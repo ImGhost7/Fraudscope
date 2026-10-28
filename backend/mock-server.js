@@ -13,6 +13,8 @@ const { faker } = require('@faker-js/faker');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { detectFraud } = require('./fraud_engine/ruleEngine');
+const { createMlPipeline } = require('./services/mlPipeline');
+const mountMlRoutes = require('./routes/ml');
 
 const app = express();
 const server = http.createServer(app);
@@ -36,6 +38,7 @@ const db = {
   alerts: [],
   investigations: [],
 };
+const mlPipeline = createMlPipeline({ db, io });   // Isolation Forest + GNN + risk fusion (optional, fails open)
 
 // ==================== SEED ACCOUNTS ====================
 const CITIES = [
@@ -111,8 +114,11 @@ function emitTransaction(txData) {
 
   const sender = db.accounts.find(a => a.account_id === txData.sender);
   const receiver = db.accounts.find(a => a.account_id === txData.receiver);
-  if (sender) { sender.balance -= txData.amount; sender.total_outgoing += txData.amount; sender.tx_count++; sender.last_active = new Date(); }
-  if (receiver) { receiver.balance += txData.amount; receiver.total_incoming += txData.amount; receiver.tx_count++; receiver.last_active = new Date(); }
+  // Activity BEFORE this transaction (dormancy rules + the GNN's leak-free dormancy feature need the prior value).
+  const prior = { sender: sender?.last_active, receiver: receiver?.last_active };
+  if (sender) { sender.balance -= txData.amount; sender.total_outgoing += txData.amount; sender.tx_count++; }
+  if (receiver) { receiver.balance += txData.amount; receiver.total_incoming += txData.amount; receiver.tx_count++; }
+  mlPipeline.queueTransaction(txData, sender, receiver, prior);
 
   io.emit('new_transaction', txData);
 
@@ -121,6 +127,9 @@ function emitTransaction(txData) {
   // After it completes we re-broadcast the enriched tx so the live feed and graph
   // both receive the updated anomaly_flag / fraud_type values.
   const engine = detectFraud(txData, db, io).then(result => {
+    // Advance account activity only AFTER scoring, so rules see the pre-transaction state
+    if (sender) sender.last_active = new Date();
+    if (receiver) receiver.last_active = new Date();
     // Re-broadcast the enriched tx so all listeners (graph, live feed) get updated data
     io.emit('transaction_updated', txData);
     if (result && result.flags && result.flags.length > 0 && txData.anomaly_flag) {
@@ -128,7 +137,14 @@ function emitTransaction(txData) {
       // but emit again here in case io was not passed through (belt-and-suspenders).
       io.emit('transaction_flagged', txData);
     }
-  }).catch(err => console.error('[FraudEngine] async error:', err.message));
+    // Second/third detection layers run detached: they never delay the rule verdict or the simulator
+    mlPipeline.enrichTransaction(txData, result).catch(() => {});
+    return result;
+  }).catch(err => {
+    if (sender) sender.last_active = new Date();
+    if (receiver) receiver.last_active = new Date();
+    console.error('[FraudEngine] async error:', err.message);
+  });
 
   // Non-enumerable so it never leaks into JSON responses / socket payloads;
   // lets callers await the engine verdict before replying.
@@ -445,7 +461,9 @@ app.get('/api/transactions/graph', (req, res) => {
   const nodes = db.accounts.filter(a => accIds.has(a.account_id)).map(a => ({
     id: a.account_id, name: a.customer_name, type: a.account_type,
     risk_score: a.risk_score, is_flagged: a.is_flagged, status: a.status,
+    gnn_risk_score: a.gnn_risk_score, gnn_risk_level: a.gnn_risk_level, gnn_flagged: a.gnn_flagged,
     balance: a.balance, kyc_level: a.kyc_level, branch: a.branch, geo_location: a.geo_location,
+    gnn_risk_score: a.gnn_risk_score, gnn_risk_level: a.gnn_risk_level, gnn_flagged: a.gnn_flagged,
     val: Math.max(2, (a.risk_score || 0) / 10)
   }));
   const links = txs.map(t => ({
@@ -800,6 +818,8 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log(`🔌 Disconnected: ${socket.id}`));
 });
 
+mountMlRoutes(app, mlPipeline, db);
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`\n🚀 Fraudscope AI DEMO Server (In-Memory Mode)`);
@@ -814,4 +834,5 @@ server.listen(PORT, () => {
 
   
   startSimulator();
+  mlPipeline.start();
 });

@@ -25,6 +25,10 @@ const transactionSchema = new mongoose.Schema({
   rule_flags: [{ type: String }],
   status: { type: String, enum: ['COMPLETED', 'PENDING', 'FLAGGED', 'BLOCKED'], default: 'COMPLETED' },
   description: String,
+  // multi-detector analysis (Isolation Forest + GNN + fusion); risk_score keeps its rule-engine meaning
+  detectors: { type: mongoose.Schema.Types.Mixed },
+  final_risk_score: Number,
+  final_risk_level: String,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

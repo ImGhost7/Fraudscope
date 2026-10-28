@@ -5,6 +5,7 @@ const alertSchema = new mongoose.Schema({
   alert_type: { type: String, required: true },
   severity: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], default: 'HIGH' },
   risk_score: { type: Number, default: 0, min: 0, max: 100 },
+  final_risk_score: Number,
   tx_references: [{ type: String }],
   account_references: [{ type: String }],
   description: String,

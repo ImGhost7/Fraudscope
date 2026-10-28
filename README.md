@@ -139,3 +139,26 @@ The intelligence layer combines graph heuristics with anomaly scoring. The model
 ---
 
 *Fraudscope AI — Built for RBI AML Compliance & FIU Reporting*
+
+
+---
+
+## 🧠 Three detection layers: rules + Isolation Forest + GNN
+
+Fraudscope now combines the rule engine, the Isolation Forest and a **GraphSAGE graph neural network** (account-level
+risk learned from the transaction graph), fused by a transparent, configurable policy. NetworkX analytics keep their
+role. Full documentation, evaluation protocol, measured results and limitations:
+
+* [`docs/GNN.md`](docs/GNN.md) - architecture, graph construction, features, training, fusion, API, commands
+* [`docs/GNN_RESULTS.md`](docs/GNN_RESULTS.md) - measured held-out comparison (generated from `evaluation.json`)
+* [`docs/GNN_AUDIT.md`](docs/GNN_AUDIT.md) - what the repository audit found before the upgrade
+
+```bash
+# ML service (loads the committed model in ml-service/models/gnn; retrain with `python -m fraud_gnn.train`)
+cd ml-service && pip install -r requirements.txt && python -m uvicorn app:app --port 8000
+cd backend && npm install && npm run demo          # picks up ML_SERVICE_URL (default http://localhost:8000)
+cd frontend && npm install && npm run dev
+```
+The app works without the ML service (rule engine only); the dashboard shows the GNN as *unavailable* with the reason.
+Tests: `cd ml-service && python -m pytest tests -q`, `cd backend && npm test`, `cd frontend && npm test`.
+> Synthetic data only. Results show the pipeline works, not that it detects real laundering.
