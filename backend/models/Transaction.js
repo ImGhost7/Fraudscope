@@ -20,11 +20,7 @@ const transactionSchema = new mongoose.Schema({
   },
   risk_score: { type: Number, default: 0, min: 0, max: 100 },
   anomaly_flag: { type: Boolean, default: false },
-  fraud_type: {
-    type: String,
-    enum: ['NONE', 'STRUCTURING', 'LAYERING', 'ROUND_TRIP', 'DORMANT_ACTIVATION', 'FAN_OUT', 'MULE'],
-    default: 'NONE'
-  },
+  fraud_type: { type: String, default: 'NONE' },
   ml_score: { type: Number, default: 0 },
   rule_flags: [{ type: String }],
   status: { type: String, enum: ['COMPLETED', 'PENDING', 'FLAGGED', 'BLOCKED'], default: 'COMPLETED' },

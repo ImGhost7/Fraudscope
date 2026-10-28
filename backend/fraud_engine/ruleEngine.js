@@ -319,6 +319,11 @@ async function runFraudEngine(tx, context = {}) {
       }
     }
 
+    // Below the alert threshold: the engine's score replaces any placeholder score the
+    // transaction was created with, so the UI never shows a high risk on a "clean" tx.
+    tx.risk_score = aggregated.finalScore;
+    tx.rule_flags = aggregated.allFlags;
+
     return {
       ...aggregated,
       isSuspicious,

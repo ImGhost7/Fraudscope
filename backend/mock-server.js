@@ -120,16 +120,19 @@ function emitTransaction(txData) {
   // detectFraud mutates txData in-place (sets anomaly_flag, rule_flags, fraud_type etc.)
   // After it completes we re-broadcast the enriched tx so the live feed and graph
   // both receive the updated anomaly_flag / fraud_type values.
-  detectFraud(txData, db, io).then(result => {
+  const engine = detectFraud(txData, db, io).then(result => {
     // Re-broadcast the enriched tx so all listeners (graph, live feed) get updated data
     io.emit('transaction_updated', txData);
-    if (result && result.flags && result.flags.length > 0) {
+    if (result && result.flags && result.flags.length > 0 && txData.anomaly_flag) {
       // ruleEngine already emits transaction_flagged internally via io,
       // but emit again here in case io was not passed through (belt-and-suspenders).
       io.emit('transaction_flagged', txData);
     }
   }).catch(err => console.error('[FraudEngine] async error:', err.message));
 
+  // Non-enumerable so it never leaks into JSON responses / socket payloads;
+  // lets callers await the engine verdict before replying.
+  Object.defineProperty(txData, 'engine', { value: engine, enumerable: false });
   return txData;
 }
 
@@ -641,7 +644,7 @@ app.post('/api/simulator/account', (req, res) => {
 });
 
 // POST /api/simulator/transaction — manually submit a transaction through the full pipeline
-app.post('/api/simulator/transaction', (req, res) => {
+app.post('/api/simulator/transaction', async (req, res) => {
   const { sender, receiver, amount, transaction_type = 'UPI', channel = 'MOBILE' } = req.body;
 
   if (!sender || !receiver || !amount) {
@@ -668,6 +671,7 @@ app.post('/api/simulator/transaction', (req, res) => {
 
   // Route through the SAME emitTransaction() pipeline
   const result = emitTransaction(tx);
+  await result.engine; // wait for the fraud engine so the response carries the real verdict
 
   console.log(`💳 [Studio] Manual transaction: ${sender} → ${receiver} ₹${Number(amount).toLocaleString()} [${result.anomaly_flag ? '🚨 FLAGGED' : '✅ CLEAN'}]`);
   res.status(201).json(result);

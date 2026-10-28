@@ -18,6 +18,8 @@ const io = new Server(server, {
   },
 });
 
+app.set('io', io);
+
 // Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
@@ -30,6 +32,8 @@ app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/accounts', require('./routes/accounts'));
 app.use('/api/investigations', require('./routes/investigations'));
+app.use('/api/rules', require('./routes/rules'));
+app.use('/api/simulator', require('./routes/simulator'));
 
 // Health check
 app.get('/health', (req, res) => {
